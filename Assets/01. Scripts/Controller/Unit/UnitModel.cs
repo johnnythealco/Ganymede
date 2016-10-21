@@ -57,15 +57,15 @@ public class UnitModel : MonoBehaviour
             Z = _UnitSize + _targetPosition.z;
 
 
-            Vector3 ShotTarget = new Vector3(X, Y, Z);
-            
+            Vector3 ShotTarget = (new Vector3(X, Y, Z));
+            var heading = ShotTarget - transform.position;
+            ShotTarget = ShotTarget + heading;
+
             ProjectileScript projectile = Instantiate(ammo, weaponSpawn.position, Quaternion.identity) as ProjectileScript;
-            projectile.transform.LookAt(ShotTarget);
-            projectile.GetComponent<Rigidbody>().AddForce(projectile.transform.forward * speed);              
+            projectile.MissTarget(ShotTarget, speed);              
         }
     }
-
-
+    
     public void SetColliders(bool _value)
     {
 

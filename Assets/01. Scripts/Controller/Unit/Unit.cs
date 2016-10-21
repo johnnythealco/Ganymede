@@ -11,21 +11,19 @@ public class Unit : MonoBehaviour
     public UnitState state;
     public Sprite Icon;
     public string DsiplayName;
-
     public unitSize Size;
     public float MaxSpeed;
     public float Acceleration;
-
-
     public int Armour;
     public ArmourType ArmourType;
-
     public int Shields;
     public int Engines;
     public float Evasion = 0.01f;
 
     public List<string> Weapons;
     public List<string> Actions;
+
+    public GameObject Explosion;
 
     public Unit ActiveTarget { get; set; }
     public string SelectedWeapon { get; set; }
@@ -129,18 +127,6 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
-    public bool AttackWith(string _weapon, string _subSystem)
-    {
-        var weapon = Game.Register.GetWeapon(_weapon);
-        if (weapon.accuracy >= this.state.evasion)
-        {
-            return true;
-        }
-
-        return false;
-
-    }
-
     public bool HitBy(string _weapon)
     {
         var weapon = Game.Register.GetWeapon(_weapon);
@@ -170,24 +156,22 @@ public class Unit : MonoBehaviour
 
         if (state.armour <= 0)
         {
+            DestroyUnit();
             return true;
         }
 
         return false;
-
-
-
-    }
-
-
+   }
+    
     public void Fire(Unit _Target)
     {
-        StartCoroutine(FireSelectedWeapon(_Target));
+        var weapon = Game.Register.GetWeapon(SelectedWeapon);
+        StartCoroutine(Attack(_Target, weapon));
     }
 
-    IEnumerator FireSelectedWeapon(Unit _Target)
+    IEnumerator Attack(Unit _Target, Weapon _Weapon)
     {
-        var weapon = Game.Register.GetWeapon(SelectedWeapon);
+        var weapon = _Weapon;
         int weaponSpawnIndex = 0;
         int TargetIndex = 0;
         int shots = Game.Random.Next(weapon.projectile_Min_Shots, weapon.projectile_Max_Shots);
@@ -222,6 +206,8 @@ public class Unit : MonoBehaviour
                 if (unitModel != null)
                     unitModel.SetColliders(false);
                     unitModel.Fire_Hit(weaponSpawn, _Target.UnitModels[TargetIndex].gameObject, weapon);
+
+                _Target.HitBy(weapon.name);
             }
             else
             {
@@ -238,152 +224,7 @@ public class Unit : MonoBehaviour
         
 
     }
-
-    //public void FireSelectedWeapon(Vector3 _Target)
-    //{
-    //    var weapon = Game.Register.GetWeapon(SelectedWeapon);
- 
-
-    //    if (!Firing)
-    //    {
-    //        transform.LookAt(_Target);
-    //        StartCoroutine(UnitModelsFire(_Target, weapon));
-    //    }
-    //}
-
-
-    //IEnumerator UnitModelsFire(Unit _Target, Weapon _weapon)
-    //{
-    //    Firing = true;
         
-
-    //    var targets = _Target.UnitModels;
-    //    var attackers = this.UnitModels;
-    //    int _TargetIndex = 0;
-     
-    //        for (int i = 0; i < attackers.Count(); i++)
-    //        {
-    //        attackers[i].FireAt(targets[_TargetIndex].transform.position,_weapon);
-
-    //        if (_TargetIndex < targets.Count())
-    //            _TargetIndex++;
-    //        else
-    //            _TargetIndex = 0; 
-    //        }
-
-    //    while(true)
-    //    {
-    //        bool unitsfinishedFireing = true;
-    //        foreach (var model in attackers)
-    //        {
-    //            if (model.Firing)
-    //                unitsfinishedFireing = false;
-    //        }
-
-    //        if (unitsfinishedFireing)
-    //            break;
-
-    //        yield return null;
-    //    }
-
-    //    Firing = false;
-        
-      
-    // }
-
-    //IEnumerator UnitModelsFire(Vector3 _Target, Weapon _weapon)
-    //{
-    //    Firing = true;
-            
-    //    var attackers = this.UnitModels;
-    //    for (int i = 0; i < attackers.Count(); i++)
-    //    {
-    //        attackers[i].FireAt(_Target, _weapon);
-    //    }
-
-    //    while (true)
-    //    {
-    //        bool unitsfinishedFireing = true;
-    //        foreach (var model in attackers)
-    //        {
-    //            if (model.Firing)
-    //                unitsfinishedFireing = false;
-    //        }
-
-    //        if (unitsfinishedFireing)
-    //            break;
-
-    //        yield return null;
-    //    }
-
-    //    Firing = false;
-
-
-    //}
-
-
-
-    //IEnumerator Fire(Unit _Target, Weapon _weapon)
-    //{
-    //    Firing = true;
-    //    int layerMask = 1 << 10;
-    //    var ammo = _weapon.projectile;
-    //    var speed = _weapon.projectileSpeed;
-
-        
-    //    int shots = Game.Random.Next(_weapon.projectile_Min_Shots, _weapon.projectile_Max_Shots);
-    //    var targets = _Target.UnitModels;
-    //    var attackers = this.UnitModels;
-    //    int firedshots = 0;
-
-    //    foreach(var unit in attackers)
-    //    {
-    //        unit.GetComponent<Collider>().enabled = false;
-    //    }
-
-
-
-    //    while (firedshots < shots)
-    //    {
-                         
-    //        for (int t = 0; t < targets.Count(); t++)
-    //        {
-    //            for (int i = 0; i < attackers.Count(); i++)
-    //            {
-    //                var attacker = attackers[i];
-    //                var targetPosition = targets[t].transform.position;
-    //                Vector3 trajectory = targetPosition - attacker.transform.position;
-    //                attacker.transform.LookAt(targetPosition);
-    //                var weaponindex = Game.Random.Next(attacker.WeaponSpawns.Count());
-    //                Vector3 spawnpoint = attacker.WeaponSpawns[weaponindex].transform.position;
-    //                RaycastHit hit;
-
-    //                if (Physics.Raycast(spawnpoint, trajectory, out hit, 10000f, layerMask))
-    //                {
-    //                    ProjectileScript projectile = Instantiate(ammo, spawnpoint, Quaternion.identity) as ProjectileScript;
-    //                    projectile.transform.LookAt(targetPosition);
-    //                    projectile.GetComponent<Rigidbody>().AddForce(projectile.transform.forward * speed);
-    //                    projectile.impactNormal = hit.normal;
-    //                }
-    //                t++;
-    //                yield return new WaitForSeconds(_weapon.projectileShotDelay / 2);
-    //                firedshots++;
-    //            }                
-    //        }
-            
-    //        yield return new WaitForSeconds(_weapon.projectileShotDelay);
-
-    //    }
-
-    //    foreach (var unit in attackers)
-    //    {
-    //        unit.GetComponent<Collider>().enabled = true;
-    //    }
-
-    //    Firing = false;
-
-    //}
-
     #region Damage Types
 
     void takeLaserDamage (int _damage)
@@ -623,7 +464,14 @@ public class Unit : MonoBehaviour
         if (Battle.VisibleUnits.Contains(this))
             Battle.VisibleUnits.Remove(this);
 
-        Destroy (gameObject);
+        gameObject.SetActive(false);
+
+        if(Explosion != null)
+        {
+            Instantiate(Explosion, transform.position, Quaternion.identity);
+        }
+
+        Destroy (gameObject, 3f);
 	}
 
     #endregion
@@ -654,80 +502,6 @@ public class Unit : MonoBehaviour
         }
         Moving = false;
     }
-
-
-    //float stoppingDistance
-    //{
-    //    get
-    //    {
-    //        var acceleration = state.Acceleration;
-    //        var currentVelocity = state.MaxSpeed;
-
-    //        var stoppingDistance = (acceleration * acceleration) / (currentVelocity * 2);
-    //        return stoppingDistance;
-
-
-    //    }
-    //}
-
-    //IEnumerator MoveUsingRigidBody()
-    //{
-    //    var heading = destination - transform.position;
-    //    var direction = heading.normalized;
-    //    var distance = heading.magnitude;
-    //    var Sqr_StoppingDistance = stoppingDistance * stoppingDistance;
-    //    float maxVelocity;
-
-    //    if((distance* distance) <= (Sqr_StoppingDistance) * 2 )
-    //    {
-    //        maxVelocity = Mathf.Sqrt(stoppingDistance * 2 * state.Acceleration);
-    //    }
-    //    else
-    //    {
-    //        maxVelocity = state.MaxSpeed;
-    //    }
-        
-
-    //    bool outsideStoppingDistance = distance > stoppingDistance;
-
-    //    while (true)
-    //    {
-    //        heading = destination - transform.position;
-    //        direction = heading.normalized;
-    //        distance = heading.magnitude;
-    //        outsideStoppingDistance = distance > stoppingDistance;
-
-    //        if(outsideStoppingDistance)
-    //        { 
-    //            while (rb.velocity.magnitude < maxVelocity)
-    //            {
-    //                rb.AddForce(direction * state.Acceleration, ForceMode.Acceleration);                   
-    //                yield return null;
-    //            }
-    //            rb.velocity = direction * maxVelocity;               
-    //         }
-    //        else
-    //        {
-    //            break;
-    //        }
-
-    //        yield return null;          
-    //    }
-
-    //    heading = destination - transform.position;
-    //    direction = heading.normalized;
-    //    distance = heading.magnitude;
-    //    var curVelocity = rb.velocity;
-    //    //var deceleration = curVelocity * curVelocity / 2 * distance;
-
-    //    rb.AddForce(-curVelocity, ForceMode.Acceleration);       
-    //    Debug.Log("Move Finished ");
-
-
-
-
-
-    //}
 
     #endregion
 }

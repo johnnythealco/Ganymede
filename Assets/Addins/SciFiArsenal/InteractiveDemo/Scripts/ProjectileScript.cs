@@ -9,46 +9,46 @@ public class ProjectileScript : MonoBehaviour
     [HideInInspector]
     public Vector3 impactNormal; //Used to rotate impactparticle.
     GameObject Target { get; set; }
+    Vector3 Miss { get; set; }
     float speed { get; set; }   
-    float MaxLifeTime { get; set; }
+  
+    bool Moving;
 	
 	void Start () 
 	{
         projectileParticle = Instantiate(projectileParticle, transform.position, transform.rotation) as GameObject;
-        projectileParticle.transform.parent = transform;
-        MaxLifeTime = 10f;
-       
-        Destroy(gameObject, MaxLifeTime);
-	}
-
-    void FixedUpdate()
-    {
-        if(Target != null && speed != 0)
-        {
-            
-            var rb = gameObject.GetComponent<Rigidbody>();
-            if (rb.velocity.sqrMagnitude < 1f)
-            {
-                transform.LookAt(Target.transform.position);
-                rb.AddForce(transform.forward * speed);
-            }
-            var sqr_distance = (transform.position - Target.transform.position).sqrMagnitude;
-            if (sqr_distance > 3600)
-            {
-                transform.LookAt(Target.transform.position);
-                rb.velocity = Vector3.zero;
-                rb.AddForce(transform.forward * speed/2);
-            }       
-        }
+        projectileParticle.transform.parent = transform;  
     }
-
+  
     public void SetTarget(GameObject _Target, float _speed)
     {
         Target = _Target;
         speed = _speed;
+
+        if (Target != null && speed != 0)
+        {
+            StartCoroutine(Hit_Target());
+        }
     }
 
-	void OnCollisionEnter (Collision hit) {
+    public void MissTarget(Vector3 _Miss, float _speed)
+    {
+        Miss = _Miss;
+        speed = _speed;
+
+
+        if (speed != 0 && Target == null)
+        {
+            StartCoroutine(Miss_Target());
+        }
+        else
+        {
+            StartCoroutine(Hit_Target());
+        }
+
+    }
+        
+    void OnCollisionEnter (Collision hit) {
 
         if (hit.collider.gameObject.layer != 10)
             return;
@@ -77,5 +77,43 @@ public class ProjectileScript : MonoBehaviour
         Destroy(gameObject);
 	}
 
-   
+    IEnumerator Hit_Target()
+    {
+        Moving = true;
+        var destination = Target.transform.position;
+
+        float sqrRemainingDistance = (transform.position - destination).sqrMagnitude; //sqrMagnitude is cheaper on the CPU than Magnitude
+
+        while (sqrRemainingDistance > float.Epsilon && Moving)
+        {
+            destination = Target.transform.position;
+            transform.LookAt(destination);
+            Vector3 newPosition = Vector3.MoveTowards(transform.position, destination, speed * Time.deltaTime);
+            transform.position = newPosition;
+            sqrRemainingDistance = (transform.position - destination).sqrMagnitude;
+            yield return null;
+        }
+
+        Moving = false;
+    }
+
+    IEnumerator Miss_Target()
+    {
+        
+        var destination = Miss;
+
+        float sqrRemainingDistance = (transform.position - destination).sqrMagnitude; //sqrMagnitude is cheaper on the CPU than Magnitude
+
+        while (sqrRemainingDistance > float.Epsilon)
+        {
+            transform.LookAt(destination);
+            Vector3 newPosition = Vector3.MoveTowards(transform.position, destination, speed * Time.deltaTime);
+            transform.position = newPosition;
+            sqrRemainingDistance = (transform.position - destination).sqrMagnitude;
+            yield return null;
+        }
+        Destroy(gameObject);
+    }
+
+
 }
