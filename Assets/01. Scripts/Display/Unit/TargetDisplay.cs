@@ -64,7 +64,7 @@ public class TargetDisplay : MonoBehaviour {
         if (Evasion != null)
             Evasion.text = unit.state.evasion.ToString();
         if (Size != null)
-            Size.text = unit.state.Size.ToString();
+            Size.text = unit.Size.ToString();
         if (ArmourType != null)
             ArmourType.text = unit.state.armourType.ToString();         
     }

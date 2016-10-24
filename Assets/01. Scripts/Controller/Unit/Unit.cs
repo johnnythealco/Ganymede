@@ -3,15 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-[System.Serializable]
+[RequireComponent(typeof (SphereCollider))]
 public class Unit : MonoBehaviour
 {
     #region Variables
 
     public UnitState state;
     public Sprite Icon;
-    public string DsiplayName;
-    public unitSize Size;
+    public string DsiplayName;    
     public float MaxSpeed;
     public float Acceleration;
     public int Armour;
@@ -25,6 +24,7 @@ public class Unit : MonoBehaviour
 
     public GameObject Explosion;
 
+    public float Size { get; set; }
     public Unit ActiveTarget { get; set; }
     public string SelectedWeapon { get; set; }
     public string SelectedAction { get; set; }
@@ -43,6 +43,8 @@ public class Unit : MonoBehaviour
     {
         UnitModels = transform.GetComponentsInChildren<UnitModel>().ToList();
 
+        Size = GetComponent<SphereCollider>().radius;
+
         WeaponSpawns = new List<Transform>();
         foreach (var model in UnitModels)
         {
@@ -52,8 +54,8 @@ public class Unit : MonoBehaviour
     }
 
     #region Getters & Setters
-
-    public string faction { get { return state.Owner; } }
+  
+    public string Owner { get { return state.Owner; } }
 
     public float currentMovement { get { return state.MaxSpeed; } }
 

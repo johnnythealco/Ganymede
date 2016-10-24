@@ -9,9 +9,7 @@ public class UnitState
 
 	public string UnitType;
     public Vector3 Position;
-    public string Owner;
-
-    public unitSize Size{ get { return Game.Register.GetUnitType (UnitType).Size; } }
+    public string Owner;   
 
 	public ArmourType armourType { get { return Game.Register.GetUnitType (UnitType).ArmourType; } }
 

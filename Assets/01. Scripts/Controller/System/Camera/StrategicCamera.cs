@@ -3,6 +3,8 @@ using System.Collections;
 
 public class StrategicCamera : MonoBehaviour {
 
+    public Unit Unit_Focus;
+
 
     [SerializeField]
     float ScrollSpeed = 15f;
@@ -53,6 +55,15 @@ public class StrategicCamera : MonoBehaviour {
        
         if (Input.GetKeyDown(KeyCode.F1))
             screenEdgeMoveEnabled = !screenEdgeMoveEnabled;
+
+        if(Input.GetKeyDown(KeyCode.L))
+        {
+            if(Unit_Focus != null)
+            {
+                CenterOnUnitFocus();
+            }
+                
+        }
 
         #region Movement
         if (Input.GetKey("d"))
@@ -192,15 +203,31 @@ public class StrategicCamera : MonoBehaviour {
 
     public void ResetOnUnit(Unit _unit)
     {
+        Unit_Focus = _unit;
+
+        float offset = _unit.Size * 1.1f;
+        Vector3 posOffset = new Vector3(0, offset, offset);
      
-        transform.position = _unit.transform.position + offSet;
-        transform.rotation = InitRotation;        
+        transform.position = Unit_Focus.transform.position + posOffset;
+        transform.LookAt(Unit_Focus.transform.position);      
 
         Cam.fieldOfView = InitalFOV;
-        Focus = _unit.transform.position;
 
       
     }
 
-   
+    public void CenterOnUnitFocus()
+    { 
+        float offset = Unit_Focus.Size * 2f;
+        Vector3 posOffset = new Vector3(0, offset, -offset);
+
+        transform.position = Unit_Focus.transform.position + posOffset;
+        transform.LookAt(Unit_Focus.transform.position);
+
+        Cam.fieldOfView = InitalFOV;
+
+
+    }
+
+
 }

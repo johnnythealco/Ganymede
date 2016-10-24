@@ -5,8 +5,7 @@ using System.Collections;
 public class UnitModel : MonoBehaviour
 {
     public List<Transform> WeaponSpawns;
-    public Collider ModelCollider;
-    public bool Firing;
+    public bool Firing    { get; set;}
 
     public void Fire_Hit(Transform weaponSpawn, GameObject _Target, Weapon _weapon)
     {

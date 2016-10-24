@@ -1,80 +1,89 @@
-﻿using UnityEngine;
+﻿    using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
 public class JKWeaponTesting : MonoBehaviour
 {
-    public Unit ActiveUnit;
-    public Unit ActiveTarget;
+    public string FleetOwner;
+    public string FleetName;
+    public List<Unit> Units;
 
-
-    RaycastHit hit;
-    public GameObject ammo;
-    [HideInInspector]
-    public int currentProjectile = 0;
-    public float speed = 1000;
-    public int Maxshots = 10;
-    
-   
+    public Fleet fleet;
 
     void Update()
     {
-
-        if (Input.GetKey(KeyCode.LeftControl))
+        if(Input.GetKeyDown(KeyCode.C))
         {
-            Time.timeScale = 0;
+            fleet = CreateFleet(Units, FleetOwner, FleetName);
         }
 
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKeyDown(KeyCode.S) && fleet != null)
         {
-            Time.timeScale = 1;
+            fleet.SortBySize();
         }
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
 
-            StartCoroutine(Fire());
-            
+        if (Input.GetKeyDown(KeyCode.D) && fleet != null)
+        {
+            DeployFleet(fleet, Vector3.zero);
         }
     }
 
-    IEnumerator Fire()
+
+    public Fleet CreateFleet(List<Unit> _Units, string _Owner, string _Name)
     {
-        int layerMask = 1 << 9;
-      
-        System.Random rnd = new System.Random();
-        int shots = rnd.Next(Maxshots);
-        var targets = ActiveTarget.UnitModels;
-        var attackers = ActiveUnit.UnitModels;
-        int firedshots = 0;
+        var obj = new GameObject();
+        var _fleet = obj.AddComponent<Fleet>();
+        _fleet.Owner = _Owner;
+        _fleet.Name = _Name;
+        _fleet.gameObject.name = "[Fleet] " + _Name;
 
-  
-            
-        while (firedshots < shots)
+
+        foreach(var unit in _Units)
         {
-            for (int i = 0; i < attackers.Count(); i++)
-            {
-                var attacker = attackers[i];
-                var targetindex = rnd.Next(targets.Count());
-                Vector3 trajectory = targets[targetindex].transform.position;
-                attacker.transform.LookAt(targets[targetindex].transform.position);
-                var weaponindex = rnd.Next(attacker.WeaponSpawns.Count());
-                Vector3 spawnpoint = attacker.WeaponSpawns[weaponindex].transform.position;
+            var newUnit = Instantiate(unit);
+            newUnit.gameObject.SetActive(false);
+            newUnit.gameObject.transform.SetParent(_fleet.transform);
+            newUnit.state = new UnitState(newUnit, _Owner);
+            _fleet.Units.Add(newUnit);
+        }
 
-                if (Physics.Raycast(spawnpoint, trajectory, out hit, 1000f, layerMask))
-                {
-                    GameObject projectile = Instantiate(ammo, spawnpoint, Quaternion.identity) as GameObject;
-                    projectile.transform.LookAt(targets[targetindex].transform.position);
-                    projectile.GetComponent<Rigidbody>().AddForce(projectile.transform.forward * speed);
-                    projectile.GetComponent<ProjectileScript>().impactNormal = hit.normal;
-                }
-            }
-            firedshots++;
-            yield return new WaitForSeconds(0.2f);
+        return _fleet;
+    }
+
+
+    public void DeployFleet(Fleet _fleet, Vector3 _point)
+    {
+
+        int unitcount = _fleet.Units.Count();
+        float Buffer = 0f;
+        Vector3 DeploymentPosition = _point;
+
+        for(int i = unitcount -1; i > 0; i--)
+        {
+            var _unit = _fleet.Units[i];
+            _unit.transform.position = DeploymentPosition;
+            Buffer = Buffer + (_unit.Size * 2f);
+            var nexpPosition = RandomDirection_XZ(_point, Buffer);
+            DeploymentPosition = nexpPosition;
+            _unit.gameObject.SetActive(true);
 
         }
-            
-               
+    }
+
+
+    public Vector3 RandomDirection_XZ(Vector3 Origin, float magnitude)
+    {
+        var dir = Game.Random.Next(-1000, 1000);
+        float XDir = (dir / 1000f) * magnitude;
+        float ZDir = (dir / 1000f) * magnitude;
+
+        Vector3 Offset = new Vector3(XDir, 0, ZDir);    
+
+        return Offset; 
 
     }
+
+
+
 }
