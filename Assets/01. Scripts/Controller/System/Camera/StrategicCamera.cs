@@ -5,20 +5,14 @@ public class StrategicCamera : MonoBehaviour {
 
     public Unit Unit_Focus;
 
-
     [SerializeField]
-    float ScrollSpeed = 15f;
+    float ScrollSpeed = 200f;
     [SerializeField]
     float ScrollEdge = 0.01f;
-
-
     public float zoomSpeed = 10f;
-    public float minZoomFOV = 2;
-    public float maxZoomFOV = 90;
-
-
-    public float dragSpeed = 0.25f;
-    
+    public float minZoom = 50;
+    public float maxZoom = 1000;
+    public float dragSpeed = 0.8f;    
     private Vector3 dragOrigin;
 
     public Camera Cam { get; set; }
@@ -43,10 +37,9 @@ public class StrategicCamera : MonoBehaviour {
         {
             camController = this;
         }
-        Focus = new Vector3(0f, 0f, 0f);
+        updateFocus();
     }
-
-
+    
     void Update()
     {
         if (!Cam.enabled)
@@ -61,47 +54,56 @@ public class StrategicCamera : MonoBehaviour {
             if(Unit_Focus != null)
             {
                 CenterOnUnitFocus();
-            }
-                
+            }                
         }
+               
+       
 
-        #region Movement
+            #region Movement
         if (Input.GetKey("d"))
         {
-            transform.Translate(Vector3.right * Time.deltaTime * ScrollSpeed, Space.World);
+            transform.Translate(transform.right * Time.deltaTime * ScrollSpeed, Space.World);
+            updateFocus();
         }
         else if (Input.GetKey("a"))
         {
-            transform.Translate(Vector3.right * Time.deltaTime * -ScrollSpeed, Space.World);
+            transform.Translate(transform.right * Time.deltaTime * -ScrollSpeed, Space.World);
+            updateFocus();
         }
 
         if (Input.GetKey("w"))
         {
-            transform.Translate(Vector3.forward * Time.deltaTime * ScrollSpeed, Space.World);
+            transform.Translate(transform.up * Time.deltaTime * ScrollSpeed, Space.World);
+            updateFocus();
         }
         else if (Input.GetKey("s"))
         {
-            transform.Translate(Vector3.forward * Time.deltaTime * -ScrollSpeed, Space.World);
+            transform.Translate(transform.up * Time.deltaTime * -ScrollSpeed, Space.World);
+            updateFocus();
         }
 
         if (screenEdgeMoveEnabled)
         {
             if (Input.mousePosition.x >= Screen.width * (1 - ScrollEdge))
             {
-                transform.Translate(Vector3.right * Time.deltaTime * ScrollSpeed, Space.World);
+                transform.Translate(transform.right * Time.deltaTime * ScrollSpeed, Space.World);
+                updateFocus();
             }
             else if (Input.mousePosition.x <= Screen.width * ScrollEdge)
             {
-                transform.Translate(Vector3.right * Time.deltaTime * -ScrollSpeed, Space.World);
+                transform.Translate(transform.right * Time.deltaTime * -ScrollSpeed, Space.World);
+                updateFocus();
             }
 
             if (Input.mousePosition.y >= Screen.height * (1 - ScrollEdge))
             {
-                transform.Translate(Vector3.forward * Time.deltaTime * ScrollSpeed, Space.World);
+                transform.Translate(transform.forward * Time.deltaTime * ScrollSpeed, Space.World);
+                updateFocus();
             }
             else if (Input.mousePosition.y <= Screen.height * ScrollEdge)
             {
-                transform.Translate(Vector3.forward * Time.deltaTime * -ScrollSpeed, Space.World);
+                transform.Translate(transform.forward * Time.deltaTime * -ScrollSpeed, Space.World);
+                updateFocus();
             }
         }
         #endregion
@@ -129,17 +131,9 @@ public class StrategicCamera : MonoBehaviour {
         if (Input.GetKey("mouse 1"))
         {
             Vector3 pos = Input.mousePosition - dragOrigin;
-
             var verticalRotation = pos.y * dragSpeed;
-
-
             transform.RotateAround(Focus, -transform.right, verticalRotation * Time.deltaTime);
-
-
-
             var HorizontalRotation = pos.x * dragSpeed;
-
-
             transform.RotateAround(Focus, Vector3.up, HorizontalRotation * Time.deltaTime);
 
         }
@@ -150,11 +144,21 @@ public class StrategicCamera : MonoBehaviour {
         var scroll = Input.GetAxis("Mouse ScrollWheel");
         if (scroll > 0f)
         {
-            ZoomIn();
+            var heading = transform.position - Focus;
+            var distance = heading.magnitude;
+            var direction = heading / distance;
+            var zoomTarget = Focus + (direction * minZoom);
+            Vector3 newPosition = Vector3.MoveTowards(transform.position, zoomTarget, zoomSpeed );
+            transform.position = newPosition;
         }
         else if (scroll < 0f)
         {
-            ZoomOut();
+            var heading = transform.position - Focus;
+            var distance = heading.magnitude;
+            var direction = heading / distance;
+            var zoomTarget = Focus + (direction * maxZoom);
+            Vector3 newPosition = Vector3.MoveTowards(transform.position, zoomTarget, zoomSpeed);
+            transform.position = newPosition;
         }
 
         #endregion
@@ -163,35 +167,35 @@ public class StrategicCamera : MonoBehaviour {
 
 
     }
-
-    public void ZoomIn()
+    
+    void updateFocus()
     {
-        Cam.fieldOfView -= zoomSpeed;
-        if (Cam.fieldOfView < minZoomFOV)
+        var ray = new Ray(transform.position, transform.forward);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 10000))
         {
-            Cam.fieldOfView = minZoomFOV;
+            var layer = hit.collider.gameObject.layer;
+            switch (layer)
+            {
+                case 8:
+                    Focus = hit.point;                    
+                    break;
+                case 9:
+                    Unit_Focus = hit.transform.gameObject.GetComponent<Unit>();
+                    Focus = hit.transform.position;                    
+                    break;
+            }
         }
-    }
-
-    public void ZoomOut()
-    {
-        Cam.fieldOfView += zoomSpeed;
-        if (Cam.fieldOfView > maxZoomFOV)
-        {
-            Cam.fieldOfView = maxZoomFOV;
-        }
-    }
-
-
+ }
+    
     public void CentreOnPoint(Vector3 point)
     {       
         var currentoffSet = transform.position - Focus;
         transform.position = point + currentoffSet;
         Focus = point;
     }
-
-
-
+    
     public void ResetOn(Vector3 point)
     {
         this.transform.position = point + offSet;
