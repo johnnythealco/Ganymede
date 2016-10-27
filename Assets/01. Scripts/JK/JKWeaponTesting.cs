@@ -59,16 +59,17 @@ public class JKWeaponTesting : MonoBehaviour
 		float Buffer = 0f;
 		Vector3 DeploymentPosition = _point;
 
-		for (int i = unitcount - 1; i > 0; i--)
+		for (int i = unitcount -1; i > -1; i--)
 		{
 			var _unit = _fleet.Units [i];
 			_unit.transform.position = DeploymentPosition;
 			var cursor = Instantiate (ringCursor);
+
 			cursor.transform.position = DeploymentPosition;
-			cursor.transform.SetParent (_unit.transform, false);
+			cursor.transform.SetParent (_unit.transform, true);
 			cursor.SetCursor (_unit.Size, Color.green);
 
-			Buffer = Buffer + (_unit.Size * 2f);
+			Buffer = Buffer + (_unit.Size * 4f);
 			var nexpPosition = RandomDirection_XZ (_point, Buffer);
 			DeploymentPosition = nexpPosition;
 			_unit.gameObject.SetActive (true);
@@ -78,10 +79,10 @@ public class JKWeaponTesting : MonoBehaviour
 
 	public Vector3 RandomDirection_XZ (Vector3 Origin, float magnitude)
 	{
-		var dir = Game.Random.Next (-1000, 1000);
-		float XDir = (dir / 1000f) * magnitude;
-		float ZDir = (dir / 1000f) * magnitude;
 
+        var v2 = Random.onUnitSphere;
+		float XDir = v2.x * magnitude;
+		float ZDir = v2.y * magnitude;
 		Vector3 Offset = new Vector3 (XDir, 0, ZDir);    
 
 		return Offset; 

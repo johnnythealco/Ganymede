@@ -199,6 +199,7 @@ public class Unit : MonoBehaviour
 
             if (TargetIndex > _Target.UnitModels.Count()-1)
                 TargetIndex = 0;
+
             var targetModel = _Target.UnitModels[TargetIndex].transform.position;
 
             var unitModel = WeaponSpawns[weaponSpawnIndex].transform.GetComponentInParent<UnitModel>();

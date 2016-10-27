@@ -19,14 +19,9 @@ public class BattlePlane : MonoBehaviour {
 
     void Update()
     {
-        if (Battle.StrategicView)
-        {
+
             getStrategicMouseInput();
-        }
-        else
-        {
-            getGameMouseInput();
-        }
+      
 
     }
 
@@ -85,50 +80,50 @@ public class BattlePlane : MonoBehaviour {
         }
     }
 
-    void getGameMouseInput()
-    {
-        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-            return;
-        int layerMask = 1 << 9;
+    //void getGameMouseInput()
+    //{
+    //    if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+    //        return;
+    //    int layerMask = 1 << 9;
 
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            var ray = Battle.Manager.GameCamera.Cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 10000f, layerMask))
-            {
-                var layer = hit.collider.gameObject.layer;
-                switch (layer)
-                {                    
-                    case 9:
-                        var unit = hit.collider.gameObject.GetComponent<Unit>();
-                        if (onClickUnit != null)
-                            onClickUnit.Invoke(unit);
-                        break;
-                }
-            }
-        }
+    //    if (Input.GetMouseButtonDown(0))
+    //    {
+    //        var ray = Battle.Manager.GameCamera.Cam.ScreenPointToRay(Input.mousePosition);
+    //        RaycastHit hit;
+    //        if (Physics.Raycast(ray, out hit, 10000f, layerMask))
+    //        {
+    //            var layer = hit.collider.gameObject.layer;
+    //            switch (layer)
+    //            {                    
+    //                case 9:
+    //                    var unit = hit.collider.gameObject.GetComponent<Unit>();
+    //                    if (onClickUnit != null)
+    //                        onClickUnit.Invoke(unit);
+    //                    break;
+    //            }
+    //        }
+    //    }
 
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            var ray = Battle.Manager.GameCamera.Cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 10000f, layerMask))
-            {
-                var layer = hit.collider.gameObject.layer;
-                switch (layer)
-                {
-                    case 9:
-                        var unit = hit.collider.gameObject.GetComponent<Unit>();
-                        if (onRightClickUnit != null)
-                            onRightClickUnit.Invoke(unit);
-                        break;
-                }
-            }
-        }
-    }
+    //    if (Input.GetMouseButtonDown(1))
+    //    {
+    //        var ray = Battle.Manager.GameCamera.Cam.ScreenPointToRay(Input.mousePosition);
+    //        RaycastHit hit;
+    //        if (Physics.Raycast(ray, out hit, 10000f, layerMask))
+    //        {
+    //            var layer = hit.collider.gameObject.layer;
+    //            switch (layer)
+    //            {
+    //                case 9:
+    //                    var unit = hit.collider.gameObject.GetComponent<Unit>();
+    //                    if (onRightClickUnit != null)
+    //                        onRightClickUnit.Invoke(unit);
+    //                    break;
+    //            }
+    //        }
+    //    }
+    //}
 
 
 }
